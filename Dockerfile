@@ -16,6 +16,12 @@ COPY --chown=node:node . .
 # Nach dem Build die Entwicklungswerkzeuge (z.B. ESLint) wieder entfernen
 RUN npm run build && npm prune --omit=dev && npm cache clean --force
 
+# npm braucht die App zur Laufzeit nicht, es bringt aber eigene Funde mit (Trivy).
+# Sauberer wäre ein Multi-Stage-Build (W15).
+USER root
+RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
+USER node
+
 ENV NODE_ENV=production
 EXPOSE 3000
-CMD ["npm", "start"]
+CMD ["node", "node_modules/next/dist/bin/next", "start"]

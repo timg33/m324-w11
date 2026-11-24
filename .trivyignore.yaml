@@ -1,0 +1,9 @@
+# Bewusste Ausnahmen für Trivy. Jede Ausnahme hat eine Begründung und ein Ablaufdatum.
+# Nach dem Ablaufdatum meldet Trivy den Fund wieder und er muss neu bewertet werden.
+vulnerabilities:
+  - id: CVE-2023-45853
+    statement: >-
+      False Positive. Die Lücke liegt in MiniZip. Debian baut MiniZip nicht aus dem
+      Paket zlib1g (eigenes Paket minizip, im Image nicht installiert).
+      Quelle: security-tracker.debian.org/tracker/CVE-2023-45853. Bewertet von Tim, 24.11.2026.
+    expired_at: 2027-02-02

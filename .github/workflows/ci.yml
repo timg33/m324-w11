@@ -118,8 +118,10 @@ jobs:
           name: trivy
           path: trivy.json
 
-      # Abbruch bei HIGH oder CRITICAL, wenn es eine korrigierte Version gibt
+      # Abbruch bei HIGH oder CRITICAL, wenn es eine korrigierte Version gibt.
+      # Bewusste Ausnahmen (mit Begründung und Ablaufdatum) stehen in .trivyignore.yaml
       - name: Image scannen
         run: |
-          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock "$TRIVY" \
-            image --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 "$IMAGE"
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$PWD:/src:ro" "$TRIVY" \
+            image --severity HIGH,CRITICAL --ignore-unfixed --ignorefile /src/.trivyignore.yaml \
+            --exit-code 1 "$IMAGE"

@@ -1,2 +1,3 @@
 // Zugangsdaten für den Benachrichtigungsdienst (noch nicht angebunden)
-export const notificationApiKey = 'eES0GfVxlg3K0RSQ1vKsY3bbqCKhHfK6'
+// Der Schlüssel kommt aus einer Umgebungsvariable, nie aus dem Code (Vorlage: .env.example)
+export const notificationApiKey = process.env.NOTIFICATION_API_KEY

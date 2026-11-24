@@ -1,0 +1,5 @@
+# Ausnahmen für gitleaks (Format: Commit:Datei:Regel:Zeile)
+# Alter Schlüssel des Benachrichtigungsdienstes aus Commit 255582b.
+# Er ist widerrufen und ersetzt, liegt aber weiter in der Git-Historie. Darum hier ausgenommen.
+# Neubewertung: falls die Historie bereinigt wird, diese Zeile entfernen.
+255582b4c4c8e80e44405a3ae38ad63a695ff3e1:src/app/api/config.js:generic-api-key:2

@@ -5,15 +5,22 @@ on:
   push:
     branches: [main]
 
+# Die Jobs brauchen nur Lesezugriff auf das Repository
+permissions:
+  contents: read
+
+# Actions und Images sind auf eine feste Version (Commit bzw. Digest) gepinnt,
+# damit ein manipuliertes Tag (z.B. Trivy, März 2026) nicht automatisch reinkommt.
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - name: Code auschecken
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Node 20 einrichten
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 20
           cache: npm
@@ -26,3 +33,93 @@ jobs:
 
       - name: Build erstellen
         run: npm run build
+
+  abhaengigkeiten:
+    name: Abhängigkeiten prüfen
+    runs-on: ubuntu-latest
+    steps:
+      - name: Code auschecken
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Node 20 einrichten
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 20
+
+      # Alle Funde für die Befundliste, bricht nie ab
+      - name: Bericht aller Funde
+        run: |
+          npm audit || true
+          npm audit --json > npm-audit.json || true
+
+      - name: Bericht speichern
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: npm-audit
+          path: npm-audit.json
+
+      # Abbruch nur bei high und critical in Paketen, die in Produktion laufen
+      - name: Abhängigkeiten prüfen
+        run: npm audit --omit=dev --audit-level=high
+
+  secrets:
+    name: Secrets prüfen
+    runs-on: ubuntu-latest
+    steps:
+      - name: Code auschecken (ganze Historie)
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+
+      - name: gitleaks installieren (Version und Prüfsumme fix)
+        run: |
+          curl -sSfL -o gitleaks.tar.gz \
+            https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz
+          echo "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb  gitleaks.tar.gz" | sha256sum -c -
+          tar -xzf gitleaks.tar.gz gitleaks
+
+      # Prüft alle Commits, nicht nur den aktuellen Stand. --redact: Secret nicht im Log zeigen
+      - name: Secrets prüfen
+        run: ./gitleaks git . --redact --verbose --report-path gitleaks.json
+
+      - name: Bericht speichern
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: gitleaks
+          path: gitleaks.json
+
+  image:
+    name: Image prüfen
+    runs-on: ubuntu-latest
+    env:
+      TRIVY: aquasec/trivy:0.76.2@sha256:8f6bb947dbc528902e11f2f5be52f7b519f6a39d5d148f41166f2040499768fb
+      IMAGE: shopping-list:${{ github.sha }}
+    steps:
+      - name: Code auschecken
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Image bauen
+        run: docker build -t "$IMAGE" .
+
+      # Alle Funde für die Befundliste, bricht nie ab
+      - name: Bericht aller Funde
+        run: |
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$PWD:/out" "$TRIVY" \
+            image --format json --output /out/trivy.json "$IMAGE"
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock "$TRIVY" \
+            image --severity HIGH,CRITICAL "$IMAGE"
+
+      - name: Bericht speichern
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: trivy
+          path: trivy.json
+
+      # Abbruch bei HIGH oder CRITICAL, wenn es eine korrigierte Version gibt
+      - name: Image scannen
+        run: |
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock "$TRIVY" \
+            image --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 "$IMAGE"

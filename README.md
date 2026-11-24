@@ -4,7 +4,7 @@ Eine kleine Next.js-App (Version 15, JavaScript) für eine gemeinsame Einkaufsli
 
 ## Start
 
-Benötigt Node.js 20 (siehe `.nvmrc`, z. B. `nvm use`).
+Benötigt Node.js 24 (siehe `.nvmrc`, z. B. `nvm install` und `nvm use`). Node.js 20 ist seit dem 30.04.2026 End-of-Life.
 
 ```bash
 npm ci          # Abhängigkeiten gemäss package-lock.json installieren
@@ -66,3 +66,9 @@ Der Branch `uebung/w11-start` ist der Startpunkt für die Übung «Security in d
 - Die CI-Pipeline (`.github/workflows/ci.yml`) prüft bisher nur Lint und Build.
 - Die Datei `src/app/api/config.js` enthält absichtlich ein Test-Geheimnis. Es ist kein echter Schlüssel.
 - Das `Dockerfile` verwendet bewusst ein älteres Basis-Image (`node:18`).
+
+### Stand nach der Übung
+
+- Die Pipeline prüft zusätzlich Abhängigkeiten (`npm audit`), Secrets (gitleaks) und das Docker-Image (Trivy). Abbruchregel und Befundliste: `docs/W11_Security.md`.
+- Der Schlüssel in `config.js` ist entfernt und kommt aus der Umgebungsvariable `NOTIFICATION_API_KEY` (Vorlage: `.env.example`).
+- Das `Dockerfile` verwendet `node:24-slim` und läuft nicht mehr als root.

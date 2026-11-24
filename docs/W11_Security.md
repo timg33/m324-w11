@@ -81,6 +81,8 @@ Alles in PR #1, Pipeline grün.
 | `node:18` → `node:24-slim`, Dev-Pakete und npm entfernt, User `node` | #6, #7 | Neue Node-Major-Version. Build in der Pipeline grün, Start mit `node` lokal getestet |
 | Pipeline und `.nvmrc` auf Node 24 | Node 20 End-of-Life | Lokal braucht es `nvm install 24` |
 
+Die automatischen Dependabot-Updates (`.github/dependabot.yml`) waren kurz aktiv und haben sofort 9 Pull Requests geöffnet. Für dieses Übungs-Repo habe ich sie wieder abgeschaltet und die PRs geschlossen. Aktiv bleiben nur die Dependabot alerts.
+
 **Erneuter Scan (Commit `a329c46`):**
 
 | Werkzeug | Vorher | Nachher |
@@ -97,7 +99,7 @@ Alles in PR #1, Pipeline grün.
 
 | Fund | Begründung | Verantwortlich | Neu bewerten |
 |---|---|---|---|
-| #13 OS-Pakete ohne Fix in `node:24-slim` (37 HIGH) | Debian hat noch keine korrigierte Version. Betroffen sind vor allem `mount`, PAM und systemd, die im Container nicht laufen. Die App läuft nicht als root | Tim | Bei jedem Dependabot-PR für das Basis-Image (wöchentlich), spätestens 31.01.2027 |
+| #13 OS-Pakete ohne Fix in `node:24-slim` (37 HIGH) | Debian hat noch keine korrigierte Version. Betroffen sind vor allem `mount`, PAM und systemd, die im Container nicht laufen. Die App läuft nicht als root | Tim | Bei jedem Update des Basis-Images, spätestens 31.01.2027 |
 | #11 Rest der ESLint-Kette (1 high, 6 moderate) | Nur Entwicklungswerkzeug, verarbeitet nur unseren eigenen Code, ist im Image nicht mehr drin. Der Fix bräuchte ESLint 9 bzw. Next 16 (Major) | Tim | Beim Update auf Next 16, spätestens 31.01.2027 |
 
 ## Teil D: Abbruchregel
@@ -107,9 +109,9 @@ Alles in PR #1, Pipeline grün.
 | Secret im Code oder in der Historie | **Abbruch** | gitleaks bricht bei jedem Fund ab |
 | Abhängigkeit in Produktion ab high | **Abbruch** | `npm audit --omit=dev --audit-level=high` |
 | Image ab HIGH mit verfügbarem Fix | **Abbruch** | Trivy `--severity HIGH,CRITICAL --ignore-unfixed --exit-code 1` |
-| Image ab HIGH ohne Fix | Melden | Im Bericht, Neubewertung über Dependabot (wöchentlich) |
+| Image ab HIGH ohne Fix | Melden | Im Bericht, Neubewertung beim nächsten Update des Basis-Images |
 | moderate und low | Melden | Im Bericht, im normalen Update-Rhythmus beheben |
-| Abhängigkeiten nur für Entwicklung | Melden | Im Bericht und bei Dependabot |
+| Abhängigkeiten nur für Entwicklung | Melden | Im Bericht und bei den Dependabot alerts |
 | Bewusste Ausnahme / False Positive | Ausnahmeliste | `.trivyignore.yaml` (mit Ablaufdatum) und `.gitleaksignore` (mit Begründung) |
 
 **Begründung:**

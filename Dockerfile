@@ -1,5 +1,5 @@
 # Aktuelles LTS-Basis-Image (Node 24, Debian slim) statt node:18 (End-of-Life).
-# Mit Digest gepinnt, Dependabot hält es aktuell (.github/dependabot.yml).
+# Mit Digest gepinnt, damit sich das Image nicht unbemerkt ändert.
 FROM node:24-slim@sha256:dc26ae92c9fb15cf6b1d63e20f0944b2efe0f115b20e00be48fb23fceb061c54
 
 ENV NEXT_TELEMETRY_DISABLED=1
